@@ -8,6 +8,11 @@ The knowledge related to this repo was presented at a C++ meetup event on Febrau
 
 ## Quick Start
 
+**Note from forker:** 
+
+Below instructions are original. For Oxla you can simply use compilation docker which already hase clang onboard.
+Also it is recommeded to use oxla compilation docker for building target OxlaModuleClangTidyCheck as it would ensure compatibility with Oxla CI.
+
 To build the plugins, first, you'll need LLVM/Clang version 16.
 On Ubuntu, you can install them with the script `installClang16.sh` (see [testcpp.yml](.github/workflows/testcpp.yml) for more details).
 Then,
@@ -82,3 +87,10 @@ Finally, to test automatically, compile [ExpectedTestCallsReplacementsPath.cpp](
 - [Stephen Kelly Blog](https://steveire.wordpress.com/)
 
 Every Stephen Kelly references above were written/filmed before that `clang-tidy` introduce plugins.
+
+## Oxla plugin
+
+Target named OxlaModuleClangTidyCheck is module providing oxla custom checks.
+
+For now there is only one check in module:
+* oxla-class-member-order - check for declaration order of class elements (fields, functions, constructors, methods etc.) 
