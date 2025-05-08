@@ -18,7 +18,6 @@ public:
   void registerMatchers(ast_matchers::MatchFinder *Finder) override;
   void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
 
-private:
   enum class MemberCategory {
     PublicTypes,
     PrivateMembers,
@@ -49,10 +48,11 @@ private:
     FriendDeclarations,
     Invalid
   };
+    static MemberCategory classifyDecl(const Decl *D);
+private:
 
-  MemberCategory classifyDecl(const Decl *D);
   std::string getCategoryName(MemberCategory Cat);
-  void reportOutOfOrder(const CXXRecordDecl *Record,
+  DiagnosticBuilder reportOutOfOrder(const CXXRecordDecl *Record,
                         const Decl *CurrentDecl,
                         MemberCategory CurrentCategory,
                         MemberCategory LastCategory);
