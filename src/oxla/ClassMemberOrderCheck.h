@@ -3,10 +3,7 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang-tidy/ClangTidy.h"
 #include "clang-tidy/ClangTidyCheck.h"
-#include "clang-tidy/ClangTidyModule.h"
-#include "clang-tidy/ClangTidyModuleRegistry.h"
 
 namespace clang::tidy::oxla {
 
@@ -49,9 +46,9 @@ public:
     Invalid
   };
     static MemberCategory classifyDecl(const Decl *D);
+    static std::string getCategoryName(MemberCategory Cat);
 private:
 
-  std::string getCategoryName(MemberCategory Cat);
   DiagnosticBuilder reportOutOfOrder(const CXXRecordDecl *Record,
                         const Decl *CurrentDecl,
                         MemberCategory CurrentCategory,

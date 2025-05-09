@@ -49,13 +49,19 @@ public:
         // Generate the new text with proper access specifiers
         std::string                           newText;
         ClassMemberOrderCheck::MemberCategory lastCat = ClassMemberOrderCheck::MemberCategory::Invalid;
+        std::string lastAccessSpecifier = "";
 
         for (const auto& member : members) {
             if (member.Category != lastCat) {
-                newText += getAccessSpecifier(member.Category) + "\n";
+                auto accessSpecifier = getAccessSpecifier(member.Category);
+                if (accessSpecifier != lastAccessSpecifier) {
+                    newText += "\n" + accessSpecifier;
+                    lastAccessSpecifier = accessSpecifier;
+                }
+                newText += "\n// " + ClassMemberOrderCheck::getCategoryName(member.Category);
                 lastCat = member.Category;
             }
-            newText += member.Text + "\n";
+            newText += "\n" + member.Text + ";";
         }
 
         // Create replacement for the entire class body
@@ -235,17 +241,6 @@ DiagnosticBuilder ClassMemberOrderCheck::reportOutOfOrder(const CXXRecordDecl* R
 {
     auto diag_builder = diag(CurrentDecl->getLocation(), "declaration of %0 out of order (should come before %1)")
                 << getCategoryName(CurrentCategory) << getCategoryName(LastCategory);
-
-    // Add note showing where the previous category ended
-    if (LastCategory != MemberCategory::Invalid) {
-        for (const auto* D : Record->decls()) {
-            if (classifyDecl(D) == LastCategory) {
-                diag_builder << FixItHint::CreateInsertion(D->getEndLoc(), "\n// " + getCategoryName(CurrentCategory) + "\n");
-                break;
-            }
-        }
-    }
-
     return diag_builder;
 }
 
@@ -257,6 +252,8 @@ void ClassMemberOrderCheck::check(const MatchFinder::MatchResult& Result)
 
     auto LastCategory = MemberCategory::Invalid;
 
+    bool out_of_order = false;
+
     for (const auto* D : Record->decls()) {
         // Skip implicit and non-relevant declarations
         if (D->isImplicit() || isa<AccessSpecDecl>(D) || isa<EmptyDecl>(D))
@@ -267,14 +264,17 @@ void ClassMemberOrderCheck::check(const MatchFinder::MatchResult& Result)
             continue;
 
         if (LastCategory != MemberCategory::Invalid && CurrentCategory < LastCategory) {
+            out_of_order = true;
             auto diag = reportOutOfOrder(Record, D, CurrentCategory, LastCategory);
-
-            // Apply fixes
-            MemberSorter sorter(*Result.SourceManager, Result.Context->getLangOpts());
-            sorter.sortMembers(Record, diag);
         }
 
         LastCategory = CurrentCategory;
+    }
+
+    if (out_of_order) {
+        auto Diag = diag(Record->getLocation(), "class %0 is out of order") << Record->getName();
+        MemberSorter Sorter(*Result.SourceManager, Result.Context->getLangOpts());
+        Sorter.sortMembers(Record, Diag);
     }
 }
 
