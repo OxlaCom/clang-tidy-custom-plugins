@@ -3,10 +3,7 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang-tidy/ClangTidy.h"
 #include "clang-tidy/ClangTidyCheck.h"
-#include "clang-tidy/ClangTidyModule.h"
-#include "clang-tidy/ClangTidyModuleRegistry.h"
 
 namespace clang::tidy::oxla {
 
@@ -18,7 +15,6 @@ public:
   void registerMatchers(ast_matchers::MatchFinder *Finder) override;
   void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
 
-private:
   enum class MemberCategory {
     PublicTypes,
     PrivateMembers,
@@ -49,10 +45,11 @@ private:
     FriendDeclarations,
     Invalid
   };
+    static MemberCategory classifyDecl(const Decl *D);
+    static std::string getCategoryName(MemberCategory Cat);
+private:
 
-  MemberCategory classifyDecl(const Decl *D);
-  std::string getCategoryName(MemberCategory Cat);
-  void reportOutOfOrder(const CXXRecordDecl *Record,
+  DiagnosticBuilder reportOutOfOrder(const CXXRecordDecl *Record,
                         const Decl *CurrentDecl,
                         MemberCategory CurrentCategory,
                         MemberCategory LastCategory);
